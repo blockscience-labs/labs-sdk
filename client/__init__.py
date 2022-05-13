@@ -38,12 +38,13 @@ class Client:
         response = self.authenticated_request("GET", f'fetch-results?simulationId={simulation_id}')
         
         if response.status_code == 200:
-            subprocess.check_call([sys.executable, "tools/setup.py", "sdist", "bdist_wheel"])
-            #subprocess.check_call([sys.executable, "-m", "pip", "install", get_wheel_url(simulation_id), "--user"])
-            #subprocess.check_call(["conda", "install", get_wheel_url(simulation_id)])
+            subprocess.check_call([sys.executable, "-m", "pip", "install", get_wheel_url(simulation_id), "--user"])
         
+            unserialized = [];
             for record in json.loads(response.text)["payload"]:
-                print(pickle.loads(bytes.fromhex(record["data"])))
+                unserialized.append(pickle.loads(bytes.fromhex(record["data"])))
+
+        return unserialized
     
 def get_wheel_url(simulation_id):
         return f'{WHEEL_BASE_URL}/{simulation_id}/{WHEEL_NAME}'
