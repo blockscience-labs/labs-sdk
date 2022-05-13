@@ -36,15 +36,17 @@ class Client:
 
     def fetch_results(self, simulation_id):
         response = self.authenticated_request("GET", f'fetch-results?simulationId={simulation_id}')
+
+        unserialized = []
         
         if response.status_code == 200:
             subprocess.check_call([sys.executable, "-m", "pip", "install", get_wheel_url(simulation_id), "--user"])
-        
-            unserialized = [];
             for record in json.loads(response.text)["payload"]:
                 unserialized.append(pickle.loads(bytes.fromhex(record["data"])))
 
-        return unserialized
+            return functools.reduce(operator.iconcat, unserialized, [])    
+        else:
+            return []
     
 def get_wheel_url(simulation_id):
         return f'{WHEEL_BASE_URL}/{simulation_id}/{WHEEL_NAME}'
