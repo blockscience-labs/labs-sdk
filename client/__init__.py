@@ -1,6 +1,5 @@
 import common
 import functools, json, operator, pickle, requests, subprocess, sys
-import pandas as pd
 
 LABS_API = "https://api.blocksciencelabs.com"
 WHEEL_BASE_URL = "https://models-private.s3.us-east-2.amazonaws.com"
@@ -36,17 +35,15 @@ class Client:
         return response
 
     def fetch_results(self, simulation_id):
-        df = pd.DataFrame()
         response = self.authenticated_request("GET", f'fetch-results?simulationId={simulation_id}')
         
         if response.status_code == 200:
+            subprocess.check_call([sys.executable, "tools/setup.py", "sdist", "bdist_wheel"])
             #subprocess.check_call([sys.executable, "-m", "pip", "install", get_wheel_url(simulation_id), "--user"])
-            subprocess.check_call(["conda", "install", get_wheel_url(simulation_id)])
+            #subprocess.check_call(["conda", "install", get_wheel_url(simulation_id)])
         
             for record in json.loads(response.text)["payload"]:
-                df = pd.concat([df, pickle.loads(bytes.fromhex(record["data"]))])
-        
-        return df
+                print(pickle.loads(bytes.fromhex(record["data"])))
     
 def get_wheel_url(simulation_id):
         return f'{WHEEL_BASE_URL}/{simulation_id}/{WHEEL_NAME}'
