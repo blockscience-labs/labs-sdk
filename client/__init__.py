@@ -1,11 +1,20 @@
 import common
-import functools, json, operator, pickle, requests, subprocess, sys
+import csv, functools, json, operator, pickle, requests, subprocess, sys
 
 LABS_API = "https://api.blocksciencelabs.com"
 WHEEL_BASE_URL = "https://models-private.s3.us-east-2.amazonaws.com"
 WHEEL_NAME = "pkg-0.0.0-py3-none-any.whl"
 
 Config = dict[str, str]
+
+maxInt = sys.maxsize
+
+while True:
+    try:
+        csv.field_size_limit(maxInt)
+        break
+    except OverflowError:
+        maxInt = int(maxInt/10) # Reduce by factor of 10 until overflow ends
     
 class Client:
     def __init__(self, config: Config):
@@ -47,6 +56,20 @@ class Client:
             return functools.reduce(operator.iconcat, unserialized, [])    
         else:
             return []
+        
+    def import_results(self, file_name, simulation_id):
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "--ignore-installed", "--no-warn-script-location", get_wheel_url(simulation_id)])
+        
+        unserialized = []
+        
+        with open(file_name, 'r') as fd:
+            csv_reader = csv.reader(fd)
+            header = next(csv_reader)
+            if header != None:
+                for row in csv_reader:
+                    unserialized.append(pickle.loads(bytes.fromhex(row[5])))
+                
+        return functools.reduce(operator.iconcat, unserialized, [])
     
 def get_wheel_url(simulation_id):
         return f'{WHEEL_BASE_URL}/{simulation_id}/{WHEEL_NAME}'
