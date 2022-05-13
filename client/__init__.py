@@ -40,7 +40,7 @@ class Client:
         unserialized = []
         
         if response.status_code == 200:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", get_wheel_url(simulation_id), "--user"])
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "--ignore-installed", get_wheel_url(simulation_id)])
             for record in json.loads(response.text)["payload"]:
                 unserialized.append(pickle.loads(bytes.fromhex(record["data"])))
 
