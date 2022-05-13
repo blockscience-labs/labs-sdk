@@ -1,2 +1,1 @@
-def test():
-  print('test()')
+ERROR_MISSING_PARAMETERS = "Required parameters were not supplied."
