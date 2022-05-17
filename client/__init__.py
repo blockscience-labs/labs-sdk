@@ -1,5 +1,5 @@
 import common
-import csv, functools, json, operator, pickle, requests, subprocess, sys
+import csv, functools, json, operator, os, pickle, requests, subprocess, sys
 
 LABS_API = "https://api.blocksciencelabs.com"
 WHEEL_BASE_URL = "https://models-private.s3.us-east-2.amazonaws.com"
@@ -17,22 +17,40 @@ while True:
         maxInt = int(maxInt/10) # Reduce by factor of 10 until overflow ends
     
 class Client:
-    def __init__(self, config: Config):
-        if "email" not in config and "password" not in config:
+    def __init__(self, config: Config = {}):
+        email = ""
+        password = ""
+        
+        # Check both env variables and config for auth information
+        if "LABS_EMAIL" in os.environ:
+            email = os.environ["LABS_EMAIL"]
+            
+        if "LABS_PASS" in os.environ:
+            password = os.environ["LABS_PASS"]
+        
+        if "LABS_EMAIL" in config:
+            email = config["LABS_EMAIL"]
+        
+        if "LABS_PASS" in config:
+            password = config["LABS_PASS"]
+        
+        if (email == "" or password == "") and "LABS_TOKEN" not in os.environ:
             raise Exception(common.ERROR_MISSING_PARAMETERS)
-        else:
-            response = requests.post(f'{LABS_API}/login', config)
+        elif email != "" and password != "":
+            response = requests.post(f'{LABS_API}/login', {"email": email, "password": password})
             if response.status_code == 400:
                 raise Exception(response.text)
             elif response.status_code == 401:
                 raise Exception(json.loads(response.text)["message"])
             else:
-                self.account = json.loads(response.text)["payload"]
+                self.token = json.loads(response.text)["payload"]["token"]
+        else:
+            self.token = os.environ["LABS_TOKEN"]
                 
     def authenticated_request(self, method: str = "GET", endpoint: str = "ping", data: any = None):
         response = None;
         url = f'{LABS_API}/{endpoint}'
-        headers = {"Authorization": f'Bearer {self.account["token"]}'}
+        headers = {"Authorization": f'Bearer {self.token}'}
         
         if method == "GET":
             response = requests.get(url, headers=headers)
