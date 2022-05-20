@@ -32,3 +32,8 @@ df = pandas.DataFrame(results)
 
 #### Client.import_results(csv_file_name, simulation_id)
 Similar to `fetch_results`, `import_results` returns unserialized results from an exported result set that was downloaded by the user via the Labs UI. This method takes two parameters, the first being the path and file name of the CSV containing our results and the second being the simulation ID corresponding to the simulation responsible for generating the data on the Labs platform.
+
+```python
+results = labs.import_results("simulation.csv", 123)
+df = pandas.DataFrame(results)
+```
